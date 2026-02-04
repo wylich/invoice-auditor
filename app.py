@@ -1,0 +1,75 @@
+# app.py
+import streamlit as st
+import time
+import random
+
+# Page Config
+st.set_page_config(page_title="Invoice Agent", page_icon="🕵️", layout="centered")
+
+def simulate_agent_audit(file_name):
+    """
+    Simulates the agent's reasoning steps with visual feedback.
+    In the real app, these 'sleeps' are replaced by actual API calls.
+    """
+    
+    # 1. The Container (The "Thinking" Box)
+    with st.status("🕵️ Invoice Agent is starting...", expanded=True) as status:
+        
+        # Step 1: Ingestion
+        st.write("📄 **Ingesting:** Reading file structure...")
+        time.sleep(1.5) # Simulate upload/read time
+        st.write(f"✅ File '{file_name}' loaded securely.")
+        
+        # Step 2: Vision / OCR
+        st.write("👁️ **Vision Agent:** Extracting text and key fields...")
+        # Simulate varying processing time based on "complexity"
+        time.sleep(random.uniform(1.0, 2.5)) 
+        st.write("✅ Vendor detected")
+        # st.write("✅ Vendor detected: 'Netto' (Confidence: 98%)")
+        
+        # Step 3: VAT Logic (The Brain we just built)
+        st.write("🧮 **VAT Manager:** Checking line items against rules...")
+        time.sleep(1.0)
+        st.write("ℹ️ Applying relevant VAT exemption rules.*")
+        st.write("✅ VAT Logic validated.")
+        
+        # Step 4: Compliance (CVR & Currency)
+        st.write("🏛️ **Compliance Agent:** Verifying CVR status...")
+        time.sleep(1.2)
+        st.write("✅ CVR verified.")
+        # st.write("✅ CVR 35954716 is Active (Salling Group).")
+        
+        st.write("💱 **Forex Engine:** Checking currency...")
+        st.write("✅ Currency is DKK. No normalization needed.")
+
+        # Finalize
+        status.update(label="🚀 Audit Complete! No critical issues found.", state="complete", expanded=False)
+        
+    return True
+
+# --- Main UI ---
+st.title("🕵️ Invoice Agent")
+st.caption("The AI-Powered CFO for Danish SMEs")
+
+uploaded_file = st.file_uploader("Drop an invoice or receipt", type=["jpg", "png", "pdf"])
+
+if uploaded_file is not None:
+    # Trigger the Agent
+    if st.button("Start Audit"):
+        is_success = simulate_agent_audit(uploaded_file.name)
+        
+        if is_success:
+            st.balloons()
+            st.success("Invoice is **Green Light** ready for export.")
+            
+            # Preview of what the schema (Step 1) would output
+            with st.expander("See Extracted Data (JSON)"):
+                st.json({
+                    "vendor": "Netto",
+                    "total_dkk": 125.50,
+                    "vat_split": [
+                        {"item": "Milk", "vat": "25%"},
+                        {"item": "Pant", "vat": "0%"}
+                    ],
+                    "status": "Green"
+                })

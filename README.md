@@ -8,7 +8,7 @@ A "Human-in-the-Loop" auditing tool that extracts data from invoices, validates 
 This project uses [uv](https://github.com/astral-sh/uv) for fast Python package management.
 
 ### 1. Initialize & Install Dependencies
-Run the following commands to set up your environment and install the required packages (`streamlit`, `pydantic`, `httpx`, `cryptography`, `pillow`):
+Run the following commands to set up your environment and install the required packages (`streamlit`, `pydantic`, `httpx`, `cryptography`, `pillow`, `python-dotenv`, `openai`):
 
 ```bash
 # Clone the repo (if applicable) or create directory
@@ -18,7 +18,7 @@ mkdir invoice-agent && cd invoice-agent
 uv init
 
 # Install core dependencies
-uv add streamlit pydantic httpx cryptography pillow python-dotenv
+uv add streamlit pydantic httpx cryptography pillow python-dotenv openai
 ```
 
 ### 2. Setup Configuration

@@ -6,7 +6,10 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "cryptography>=46.0.4",
+    "dotenv>=0.9.9",
     "httpx>=0.28.1",
+    "openai>=2.16.0",
     "pydantic>=2.12.5",
     "streamlit>=1.53.1",
+    "uuid>=1.30",
 ]

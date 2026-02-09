@@ -1,4 +1,4 @@
-# 🕵️ Invoice Agent (MVP)
+# 🕵️ AI Invoice Agent (V1)
 
 **The AI-Powered CFO for Danish SMEs.**
 A "Human-in-the-Loop" auditing tool that extracts data from invoices, validates Danish CVR numbers, handles split-VAT logic for grocery receipts, and flags anomalies before they hit your accounting software.

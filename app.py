@@ -52,7 +52,7 @@ def simulate_agent_audit(file_name):
     return True
 
 # --- Main UI ---
-st.title("🕵️ Invoice Agent")
+st.title("🕵️ AI Invoice Agent")
 st.caption("The AI-Powered CFO for Danish SMEs")
 
 # Added 'jpeg' to cover alternate spellings, plus webp and avif

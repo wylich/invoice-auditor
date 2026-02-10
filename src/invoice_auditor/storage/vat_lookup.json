@@ -1,0 +1,44 @@
+{
+  "exempt_keywords": [
+    {
+      "keyword": "PANT",
+      "vat_rate": 0.0,
+      "category": "Exempt",
+      "reason": "Bottle deposit (Momsfri)"
+    },
+    {
+      "keyword": "AVIS",
+      "vat_rate": 0.0,
+      "category": "Reduced (0%)",
+      "reason": "Newspaper exemption"
+    },
+    {
+      "keyword": "FRIMÆRKE",
+      "vat_rate": 0.0,
+      "category": "Exempt",
+      "reason": "Postage stamps"
+    },
+    {
+      "keyword": "GAVEKORT",
+      "vat_rate": 0.0,
+      "category": "Exempt",
+      "reason": "Gift card purchase"
+    },
+    {
+      "keyword": "TOGBILLET",
+      "vat_rate": 0.0,
+      "category": "Exempt",
+      "reason": "Public transport"
+    },
+    {
+      "keyword": "BUS",
+      "vat_rate": 0.0,
+      "category": "Exempt",
+      "reason": "Public transport"
+    }
+  ],
+  "standard_defaults": {
+    "vat_rate": 0.25,
+    "category": "Standard (25%)"
+  }
+}

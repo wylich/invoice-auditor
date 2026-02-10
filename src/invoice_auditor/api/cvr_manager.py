@@ -1,16 +1,18 @@
-# core/cvr_manager.py
-import httpx
+# api/cvr_manager.py
 import json
-import os
+import logging
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from pathlib import Path
+from typing import Dict, Any
 
-# MVP uses the free/freemium endpoint. 
-# In production, we use an environment variable for a paid token if needed.
+import httpx
+
+logger = logging.getLogger(__name__)
+
 CVR_API_URL = "https://cvrapi.dk/api"
 
-# Local cache file to survive API outages
-CACHE_FILE = os.path.join(os.path.dirname(__file__), 'cvr_cache.json')
+CACHE_FILE = Path(__file__).parent / ".." / "storage" / "cvr_cache.json"
+
 
 class CvrManager:
     def __init__(self):
@@ -18,61 +20,57 @@ class CvrManager:
 
     def _load_cache(self) -> Dict:
         """Loads local cache of trusted CVRs."""
-        if os.path.exists(CACHE_FILE):
+        if CACHE_FILE.exists():
             try:
-                with open(CACHE_FILE, 'r') as f:
-                    return json.load(f)
+                return json.loads(CACHE_FILE.read_text(encoding="utf-8"))
             except Exception:
                 return {}
         return {}
 
     def _save_cache(self):
         """Persists cache to disk."""
-        with open(CACHE_FILE, 'w') as f:
-            json.dump(self.cache, f, indent=2)
+        CACHE_FILE.write_text(json.dumps(self.cache, indent=2), encoding="utf-8")
 
-    def validate_cvr(self, cvr_number: str) -> Dict[str, Any]:
+    async def validate_cvr(self, cvr_number: str, client: httpx.AsyncClient) -> Dict[str, Any]:
         """
         Main entry point. Returns a standardized Dict with compliance flags.
         """
-        # 1. Clean input
         cvr_clean = str(cvr_number).strip().replace("DK", "")
-        
-        # 2. Check Cache first (Minimize API costs/latency)
+
+        # Check Cache first
         cached_data = self.cache.get(cvr_clean)
         if cached_data:
             last_checked = datetime.fromisoformat(cached_data['last_checked'])
-            # If cache is fresh (< 7 days), use it
             if datetime.now() - last_checked < timedelta(days=7):
+                logger.debug("CVR %s: cache hit (checked %s)", cvr_clean, cached_data['last_checked'])
                 return cached_data['data']
 
-        # 3. Fetch from Live API
+        # Fetch from Live API
+        logger.info("CVR %s: querying %s", cvr_clean, CVR_API_URL)
         try:
-            # User-Agent is polite/required by some CVR APIs
-            headers = {'User-Agent': 'InvoiceAgent-MVP/1.0'}
+            headers = {'User-Agent': 'InvoiceAgent-MVP/2.0'}
             params = {'search': cvr_clean, 'country': 'dk'}
-            
-            with httpx.Client(timeout=5.0) as client:
-                response = client.get(CVR_API_URL, params=params, headers=headers)
-                
+
+            response = await client.get(CVR_API_URL, params=params, headers=headers)
+
             if response.status_code == 200:
                 raw_data = response.json()
                 analyzed_data = self._analyze_risk(raw_data)
-                
-                # Update Cache
+
                 self.cache[cvr_clean] = {
                     'last_checked': datetime.now().isoformat(),
                     'data': analyzed_data
                 }
                 self._save_cache()
+                logger.info("CVR %s: %s (risk=%s)", cvr_clean, analyzed_data['message'], analyzed_data['risk_level'])
                 return analyzed_data
-            
+
             elif response.status_code == 404:
+                logger.warning("CVR %s: not found in registry", cvr_clean)
                 return {"valid": False, "risk_level": "High", "message": "CVR number not found in registry."}
-                
+
         except Exception as e:
-            # GRACEFUL DEGRADATION:
-            # If API fails but we have OLD cache, use it with a warning.
+            logger.error("CVR %s: API request failed: %s", cvr_clean, e)
             if cached_data:
                 data = cached_data['data']
                 data['warning'] = "Offline Mode: Using cached data > 7 days old."
@@ -82,46 +80,28 @@ class CvrManager:
         return {"valid": False, "risk_level": "High", "message": "Unknown error."}
 
     def _analyze_risk(self, api_data: Dict) -> Dict:
-        """
-        The 'Auditor' Logic: Translates raw JSON into Business Risk.
-        """
-        # Default benign state
+        """Translates raw JSON into Business Risk."""
         result = {
             "valid": True,
             "company_name": api_data.get('name'),
             "risk_level": "Low",
             "message": "Company is active and valid."
         }
-        
-        # RISK CHECK 1: Is it active?
-        # 'hovedbranche' often implies active, but specific keys vary by API version.
-        # cvrapi.dk typically implies active unless specific enddate is set.
-        if api_data.get('enddate'):
-             result["valid"] = False
-             result["risk_level"] = "High"
-             result["message"] = f"Company Dissolved (Ophørt) on {api_data.get('enddate')}"
-             return result
 
-        # RISK CHECK 2: Status Text Analysis
-        # Some APIs return text status like "Under konkurs"
-        status_text = str(api_data).lower() # Lazy search in full dump
+        if api_data.get('enddate'):
+            result["valid"] = False
+            result["risk_level"] = "High"
+            result["message"] = f"Company Dissolved (Ophørt) on {api_data.get('enddate')}"
+            return result
+
+        status_text = str(api_data).lower()
         if "konkurs" in status_text:
             result["valid"] = False
             result["risk_level"] = "Critical"
             result["message"] = "WARNING: Company is Bankrupt (Under Konkurs)."
         elif "tvangsopløsning" in status_text:
-             result["valid"] = False
-             result["risk_level"] = "Critical"
-             result["message"] = "WARNING: Forced Dissolution (Tvangsopløsning)."
+            result["valid"] = False
+            result["risk_level"] = "Critical"
+            result["message"] = "WARNING: Forced Dissolution (Tvangsopløsning)."
 
         return result
-
-# --- Usage Example ---
-if __name__ == "__main__":
-    cvr_agent = CvrManager()
-    
-    # Test with a known CVR (e.g., Lego System A/S)
-    print(cvr_agent.validate_cvr("47458714"))
-
-    # Test with a fake/bad CVR
-    print(cvr_agent.validate_cvr("99999999"))

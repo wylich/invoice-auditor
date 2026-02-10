@@ -1,15 +1,17 @@
 [project]
 name = "invoice-auditor"
 version = "0.1.0"
-description = "Add your description here"
+description = "AI-Powered CFO for Danish SMEs. An intelligent, human-in-the-loop invoice auditor that handles split-VAT logic, CVR compliance, and automated data extraction."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "cryptography>=46.0.4",
-    "dotenv>=0.9.9",
     "httpx>=0.28.1",
-    "openai>=2.16.0",
-    "pydantic>=2.12.5",
+    "pydantic-ai",
+    "pillow",
     "streamlit>=1.53.1",
-    "uuid>=1.30",
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

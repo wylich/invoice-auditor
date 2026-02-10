@@ -1,61 +1,67 @@
-# 🕵️ AI Invoice Agent (V1)
+# AI Invoice Agent
 
 **The AI-Powered CFO for Danish SMEs.**
 A "Human-in-the-Loop" auditing tool that extracts data from invoices, validates Danish CVR numbers, handles split-VAT logic for grocery receipts, and flags anomalies before they hit your accounting software.
 
-## 🚀 Quick Start (using `uv`)
+Built with **Pydantic AI** for structured LLM extraction with tool calling, and **Streamlit** for the UI.
 
-This project uses [uv](https://github.com/astral-sh/uv) for fast Python package management.
+## Quick Start
 
-### 1. Initialize & Install Dependencies
-Run the following commands to set up your environment and install the required packages (`streamlit`, `pydantic`, `httpx`, `cryptography`, `pillow`, `python-dotenv`, `openai`):
+This project uses [uv](https://github.com/astral-sh/uv) for Python package management.
+
+### 1. Install Dependencies
 
 ```bash
-# Clone the repo (if applicable) or create directory
-mkdir invoice-agent && cd invoice-agent
-
-# Initialize uv project
-uv init
-
-# Install core dependencies
-uv add streamlit pydantic httpx cryptography pillow python-dotenv openai
+uv sync
 ```
 
 ### 2. Setup Configuration
-Create a .env file in the root directory for your API keys (optional for Mock Mode, required for Live Mode):
+
+Create a `.env` file in the root directory with your OpenAI API key:
 
 ```bash
-# .env
 OPENAI_API_KEY="your_key_here"
-# CVR_API_TOKEN="optional_if_using_paid_tier"
 ```
 
 ### 3. Run the App
-Launch the Streamlit dashboard:
 
 ```bash
 uv run streamlit run app.py
 ```
 
-## 📂 Project Structure
-```plaintext
-invoice-agent/
-├── app.py                # Frontend (Streamlit)
-├── .env                  # API Keys
-├── pyproject.toml        # Dependencies (managed by uv)
-└── core/
-    ├── auditor.py        # Main Logic (Orchestrator)
-    ├── schema.py         # Pydantic Models (Data Contracts)
-    ├── cvr_manager.py    # Compliance & CVR API Integration
-    ├── vat_manager.py    # Split-VAT Logic
-    └── vat_lookup.json   # Dictionary for "Pant" & "Avis" rules
+Then upload an invoice image from `data/example_invoices/` to test.
+
+## Project Structure
+
+```
+invoice-auditor/
+├── app.py                                  # Streamlit UI
+├── pyproject.toml                          # Dependencies & build config
+├── .env                                    # API keys (not committed)
+├── data/
+│   └── example_invoices/                   # Sample invoices for testing
+└── src/invoice_auditor/
+    ├── agent/
+    │   └── auditor.py                      # Pydantic AI agent, tools & orchestration
+    ├── api/
+    │   └── cvr_manager.py                  # Async CVR registry validation
+    ├── core/
+    │   ├── schema.py                       # Pydantic models (Invoice, AuditResult, LineItem, etc.)
+    │   └── vat_manager.py                  # VAT rule lookup engine
+    └── storage/
+        ├── vat_lookup.json                 # VAT exemption rules ("Pant", "Avis", etc.)
+        └── cvr_cache.json                  # Local CVR response cache
 ```
 
-## 🛠 Features (V1)
-* __Agentic Workflow__: Simulates "Thinking" steps for UX purposes. This will be streamed from the API call in V2 when applicable.
-* __Compliance Check__: Validates vendors against cvrapi.dk (Checks for Bankruptcy/Dissolution).
-* __Split-VAT Logic__: Detailed rule-based checking for supermarket receipts (e.g., detecting "Pant" at 0% VAT).
-* __Mock Mode__: Runs without an API key for demonstration purposes.
+## How It Works
 
-## ⚠️ Disclaimer
-This is an __MVP (Minimum Viable Product)__. Data is processed locally or via API. Ensure you comply with GDPR and the Danish Bookkeeping Act when handling real financial data.
+1. **Image preprocessing** — uploaded images are converted to standardized JPEG
+2. **Pydantic AI agent** — a GPT-4o-mini agent extracts structured data from the image, calling tools:
+   - `lookup_vat` — checks each line item against Danish VAT rules
+   - `validate_cvr` — validates vendor CVR numbers against the Danish business registry
+3. **Deterministic post-processing** — VAT math verification, currency handling, and status assignment run as plain Python (not LLM) for reliability
+4. **Result** — the invoice is classified as Green (auto-approved), Review, or Red (issues found)
+
+## Disclaimer
+
+This is an **MVP**. Data is processed locally or via API. Ensure you comply with GDPR and the Danish Bookkeeping Act when handling real financial data.

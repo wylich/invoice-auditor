@@ -1,12 +1,11 @@
 # core/vat_manager.py
 import json
 import logging
-from pathlib import Path
 from typing import Tuple, Dict
 
-logger = logging.getLogger(__name__)
+from invoice_auditor.config import settings
 
-LOOKUP_FILE = Path(__file__).parent / ".." / "storage" / "vat_lookup.json"
+logger = logging.getLogger(__name__)
 
 
 class VatManager:
@@ -16,11 +15,11 @@ class VatManager:
     def _load_rules(self) -> Dict:
         """Loads the JSON dictionary from disk."""
         try:
-            rules = json.loads(LOOKUP_FILE.read_text(encoding="utf-8"))
-            logger.info("Loaded %d VAT rules from %s", len(rules.get("exempt_keywords", [])), LOOKUP_FILE)
+            rules = json.loads(settings.vat_lookup_path.read_text(encoding="utf-8"))
+            logger.info("Loaded %d VAT rules from %s", len(rules.get("exempt_keywords", [])), settings.vat_lookup_path)
             return rules
         except FileNotFoundError:
-            logger.warning("VAT lookup file not found at %s, using defaults", LOOKUP_FILE)
+            logger.warning("VAT lookup file not found at %s, using defaults", settings.vat_lookup_path)
             return {"exempt_keywords": [], "standard_defaults": {"vat_rate": 0.25}}
 
     def lookup_item(self, description: str) -> Tuple[float, str, str]:
@@ -56,4 +55,4 @@ class VatManager:
         return False
 
     def _save_rules(self):
-        LOOKUP_FILE.write_text(json.dumps(self.rules, indent=2, ensure_ascii=False), encoding="utf-8")
+        settings.vat_lookup_path.write_text(json.dumps(self.rules, indent=2, ensure_ascii=False), encoding="utf-8")

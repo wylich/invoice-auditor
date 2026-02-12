@@ -2,16 +2,13 @@
 import json
 import logging
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Dict, Any
 
 import httpx
 
+from invoice_auditor.config import settings
+
 logger = logging.getLogger(__name__)
-
-CVR_API_URL = "https://cvrapi.dk/api"
-
-CACHE_FILE = Path(__file__).parent / ".." / "storage" / "cvr_cache.json"
 
 
 class CvrManager:
@@ -20,16 +17,16 @@ class CvrManager:
 
     def _load_cache(self) -> Dict:
         """Loads local cache of trusted CVRs."""
-        if CACHE_FILE.exists():
+        if settings.cvr_cache_path.exists():
             try:
-                return json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+                return json.loads(settings.cvr_cache_path.read_text(encoding="utf-8"))
             except Exception:
                 return {}
         return {}
 
     def _save_cache(self):
         """Persists cache to disk."""
-        CACHE_FILE.write_text(json.dumps(self.cache, indent=2), encoding="utf-8")
+        settings.cvr_cache_path.write_text(json.dumps(self.cache, indent=2), encoding="utf-8")
 
     async def validate_cvr(self, cvr_number: str, client: httpx.AsyncClient) -> Dict[str, Any]:
         """
@@ -41,17 +38,17 @@ class CvrManager:
         cached_data = self.cache.get(cvr_clean)
         if cached_data:
             last_checked = datetime.fromisoformat(cached_data['last_checked'])
-            if datetime.now() - last_checked < timedelta(days=7):
+            if datetime.now() - last_checked < timedelta(days=settings.cvr_api.cache_days):
                 logger.debug("CVR %s: cache hit (checked %s)", cvr_clean, cached_data['last_checked'])
                 return cached_data['data']
 
         # Fetch from Live API
-        logger.info("CVR %s: querying %s", cvr_clean, CVR_API_URL)
+        logger.info("CVR %s: querying %s", cvr_clean, settings.cvr_api.url)
         try:
             headers = {'User-Agent': 'InvoiceAgent-MVP/2.0'}
             params = {'search': cvr_clean, 'country': 'dk'}
 
-            response = await client.get(CVR_API_URL, params=params, headers=headers)
+            response = await client.get(settings.cvr_api.url, params=params, headers=headers)
 
             if response.status_code == 200:
                 raw_data = response.json()

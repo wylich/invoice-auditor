@@ -10,6 +10,8 @@ dependencies = [
     "pydantic-ai",
     "pillow",
     "streamlit>=1.53.1",
+    "pydantic-settings[toml]",
+    "pylance>=2.0.0",
 ]
 
 [build-system]

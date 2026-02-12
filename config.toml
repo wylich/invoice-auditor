@@ -1,0 +1,10 @@
+[openai]
+model = "openai:gpt-4o-mini"
+
+[paths]
+vat_lookup = "src/invoice_auditor/storage/vat_lookup.json"
+cvr_cache = "src/invoice_auditor/storage/cvr_cache.json"
+
+[cvr_api]
+url = "https://cvrapi.dk/api"
+cache_days = 7

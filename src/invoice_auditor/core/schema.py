@@ -40,6 +40,7 @@ class AuditResult(BaseModel):
     invoice_date: date
     invoice_time: Optional[str] = None
     currency: CURRENCY_TYPES
+    prices_include_vat: bool = Field(..., description="True if line item prices are VAT-inclusive (most Danish receipts), False if prices are shown excluding VAT (some B2B invoices)")
     total_amount_raw: float
     total_vat_raw: float
     line_items: List[LineItem]
@@ -63,6 +64,7 @@ class Invoice(BaseModel):
     invoice_time: Optional[str] = Field(None, description="HH:MM:SS if available")
 
     currency: CURRENCY_TYPES
+    prices_include_vat: bool = Field(..., description="True if line item prices are VAT-inclusive")
     total_amount_raw: float = Field(..., description="Total amount in original currency")
     total_vat_raw: float = Field(..., description="Total VAT in original currency")
 

@@ -17,7 +17,6 @@ src/invoice_auditor/storage/cvr_cache.json
 
 # Claude
 .claude/
-CLAUDE.md
 
 # Todo list
 todo.md

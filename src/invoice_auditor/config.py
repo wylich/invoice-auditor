@@ -12,7 +12,7 @@ class OpenAISettings(BaseModel):
 
 
 class PathSettings(BaseModel):
-    vat_lookup: Path = Path("src/invoice_auditor/storage/vat_lookup.json")
+    vat_lookup: Path = Path("data/lookup_dicts/vat_lookup.json")
     cvr_cache: Path = Path("src/invoice_auditor/storage/cvr_cache.json")
 
 

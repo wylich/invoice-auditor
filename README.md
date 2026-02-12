@@ -39,17 +39,22 @@ invoice-auditor/
 ├── pyproject.toml                          # Dependencies & build config
 ├── .env                                    # API keys (not committed)
 ├── data/
-│   └── example_invoices/                   # Sample invoices for testing
+│   ├── example_invoices/                   # Sample invoices for testing
+│   └── lookup_dicts/
+│       └── vat_lookup.json                 # VAT exemption rules ("Pant", "Avis", etc.)
 └── src/invoice_auditor/
     ├── agent/
-    │   └── auditor.py                      # Pydantic AI agent, tools & orchestration
-    ├── api/
-    │   └── cvr_manager.py                  # Async CVR registry validation
+    │   ├── auditor.py                      # Pydantic AI agent, tools & orchestration
+    │   └── prompt.py                       # System prompt for the agent
+    ├── api/                                # Outgoing API
     ├── core/
+    │   ├── cvr_manager.py                  # Async CVR registry validation
     │   ├── schema.py                       # Pydantic models (Invoice, AuditResult, LineItem, etc.)
     │   └── vat_manager.py                  # VAT rule lookup engine
+    ├── processing/
+    │   ├── image.py                        # Image preprocessing
+    │   └── post_audit.py                   # Post-audit verification & status assignment
     └── storage/
-        ├── vat_lookup.json                 # VAT exemption rules ("Pant", "Avis", etc.)
         └── cvr_cache.json                  # Local CVR response cache
 ```
 

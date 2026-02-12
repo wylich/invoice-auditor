@@ -61,8 +61,8 @@ async def run_audit(image_file, filename: str) -> Invoice:
     """Entry point: preprocess image, run agent, post-process, return Invoice."""
     logger.info("Starting audit for %s", filename)
 
-    image_bytes = process_image(image_file)
-    logger.info("Image preprocessed (%d bytes JPEG)", len(image_bytes))
+    image_bytes, media_type = process_image(image_file)
+    logger.info("Image preprocessed (%d bytes, %s)", len(image_bytes), media_type)
 
     async with httpx.AsyncClient(timeout=5.0) as client:
         deps = AuditDeps(
@@ -76,7 +76,7 @@ async def run_audit(image_file, filename: str) -> Invoice:
             result = await audit_agent.run(
                 [
                     "Audit this invoice image. Extract all data, use lookup_vat for each line item, and validate_cvr if a CVR is visible.",
-                    BinaryContent(data=image_bytes, media_type="image/jpeg"),
+                    BinaryContent(data=image_bytes, media_type=media_type),
                 ],
                 deps=deps,
                 model=settings.openai.model,

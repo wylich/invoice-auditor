@@ -1,4 +1,4 @@
-# api/cvr_manager.py
+# core/cvr_manager.py
 import json
 import logging
 from datetime import datetime, timedelta

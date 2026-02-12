@@ -10,7 +10,7 @@ from invoice_auditor.agent.prompt import SYSTEM_PROMPT
 from invoice_auditor.config import settings
 from invoice_auditor.core.schema import Invoice, AuditResult
 from invoice_auditor.core.vat_manager import VatManager
-from invoice_auditor.api.cvr_manager import CvrManager
+from invoice_auditor.core.cvr_manager import CvrManager
 from invoice_auditor.processing.image import process_image
 from invoice_auditor.processing.post_audit import verify_vat_math, handle_currency, assign_status
 

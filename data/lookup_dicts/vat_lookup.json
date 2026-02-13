@@ -35,6 +35,30 @@
       "vat_rate": 0.0,
       "category": "Exempt",
       "reason": "Public transport"
+    },
+    {
+      "keyword": "MEDICIN",
+      "vat_rate": 0.0,
+      "category": "Exempt",
+      "reason": "Prescription medicine (§13, stk. 1, nr. 1)"
+    },
+    {
+      "keyword": "FORSIKRING",
+      "vat_rate": 0.0,
+      "category": "Exempt",
+      "reason": "Insurance services (§13, stk. 1, nr. 10)"
+    },
+    {
+      "keyword": "PORTO",
+      "vat_rate": 0.0,
+      "category": "Exempt",
+      "reason": "Postage charges"
+    },
+    {
+      "keyword": "UNDERVISNING",
+      "vat_rate": 0.0,
+      "category": "Exempt",
+      "reason": "Education and training (§13, stk. 1, nr. 3)"
     }
   ],
   "standard_defaults": {

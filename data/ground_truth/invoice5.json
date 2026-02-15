@@ -1,0 +1,76 @@
+{
+  "vendor_name": "HI3G DENMARK ApS",
+  "vendor_cvr": "26123445",
+  "invoice_date": "2021-05-18",
+  "invoice_time": null,
+  "currency": "DKK",
+  "prices_include_vat": false,
+  "total_amount_raw": 1806.2,
+  "total_vat_raw": 360.24,
+  "line_items": [
+    {
+      "description": "Mobilabonnementer",
+      "quantity": 1.0,
+      "unit_price": 54.75,
+      "total_price": 332.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    },
+    {
+      "description": "Mobilabonnementer",
+      "quantity": 1.0,
+      "unit_price": 89.75,
+      "total_price": 359.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    },
+    {
+      "description": "Mobilabonnementer",
+      "quantity": 1.0,
+      "unit_price": 89.75,
+      "total_price": 359.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    },
+    {
+      "description": "Mobilabonnementer",
+      "quantity": 1.0,
+      "unit_price": 89.75,
+      "total_price": 359.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    },
+    {
+      "description": "Bredbåndsabonnementer",
+      "quantity": 1.0,
+      "unit_price": 44.75,
+      "total_price": 179.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    },
+    {
+      "description": "Bredbåndsabonnementer",
+      "quantity": 1.0,
+      "unit_price": 44.75,
+      "total_price": 179.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    },
+    {
+      "description": "Fakturagebyr",
+      "quantity": 1.0,
+      "unit_price": 9.8,
+      "total_price": 39.2,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    }
+  ],
+  "audit_flags": []
+}

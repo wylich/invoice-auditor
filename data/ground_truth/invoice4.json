@@ -1,0 +1,47 @@
+{
+  "vendor_name": "Dit Firmanavn",
+  "vendor_cvr": "11223344",
+  "invoice_date": "2015-03-30",
+  "invoice_time": null,
+  "currency": "DKK",
+  "prices_include_vat": false,
+  "total_amount_raw": 3300.0,
+  "total_vat_raw": 660.0,
+  "line_items": [
+    {
+      "description": "Vandhane armatur",
+      "quantity": 1.0,
+      "unit_price": 2200.0,
+      "total_price": 2200.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    },
+    {
+      "description": "Pakning til vandhane",
+      "quantity": 1.0,
+      "unit_price": 40.0,
+      "total_price": 40.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    },
+    {
+      "description": "Korsel",
+      "quantity": 1.0,
+      "unit_price": 400.0,
+      "total_price": 400.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    }
+  ],
+  "audit_flags": [
+    {
+      "category": "Compliance",
+      "severity": "High",
+      "message": "CVR number not found in registry.",
+      "is_resolved": false
+    }
+  ]
+}

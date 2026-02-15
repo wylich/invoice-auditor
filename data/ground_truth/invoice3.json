@@ -1,0 +1,22 @@
+{
+  "vendor_name": "KM Learning ApS",
+  "vendor_cvr": "37614483",
+  "invoice_date": "2019-06-09",
+  "invoice_time": null,
+  "currency": "DKK",
+  "prices_include_vat": true,
+  "total_amount_raw": 399.0,
+  "total_vat_raw": 79.8,
+  "line_items": [
+    {
+      "description": "Proximo månedligt medlemskab",
+      "quantity": 1.0,
+      "unit_price": 399.0,
+      "total_price": 399.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    }
+  ],
+  "audit_flags": []
+}

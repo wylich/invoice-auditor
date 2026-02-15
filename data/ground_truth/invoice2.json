@@ -1,0 +1,29 @@
+{
+  "vendor_name": "Thomsen Sports Cafe Fritz",
+  "vendor_cvr": "25588630",
+  "invoice_date": "2022-05-01",
+  "invoice_time": null,
+  "currency": "DKK",
+  "prices_include_vat": true,
+  "total_amount_raw": 12500.0,
+  "total_vat_raw": 2500.0,
+  "line_items": [
+    {
+      "description": "Platter til reception i nye lokaler",
+      "quantity": 100.0,
+      "unit_price": 125.0,
+      "total_price": 12500.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    }
+  ],
+  "audit_flags": [
+    {
+      "category": "Compliance",
+      "severity": "High",
+      "message": "Company Dissolved (Ophørt) on 31/12 - 2015.",
+      "is_resolved": false
+    }
+  ]
+}

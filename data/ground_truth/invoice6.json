@@ -1,0 +1,40 @@
+{
+  "vendor_name": "Slikbutikken ApS",
+  "vendor_cvr": "29403473",
+  "invoice_date": "2019-10-17",
+  "invoice_time": null,
+  "currency": "DKK",
+  "prices_include_vat": false,
+  "total_amount_raw": 1062.5,
+  "total_vat_raw": 212.5,
+  "line_items": [
+    {
+      "description": "Vingummi bamser",
+      "quantity": 2.0,
+      "unit_price": 150.0,
+      "total_price": 300.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    },
+    {
+      "description": "Lakridspiber",
+      "quantity": 3.0,
+      "unit_price": 100.0,
+      "total_price": 300.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    },
+    {
+      "description": "Bolcher",
+      "quantity": 5.0,
+      "unit_price": 50.0,
+      "total_price": 250.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    }
+  ],
+  "audit_flags": []
+}

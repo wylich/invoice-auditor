@@ -1,0 +1,29 @@
+{
+  "vendor_name": "INDUSTRILEVERANTÖREN AB",
+  "vendor_cvr": null,
+  "invoice_date": "2018-01-24",
+  "invoice_time": null,
+  "currency": "DKK",
+  "prices_include_vat": false,
+  "total_amount_raw": 7000.0,
+  "total_vat_raw": 1750.0,
+  "line_items": [
+    {
+      "description": "Engine 222-4H",
+      "quantity": 2.0,
+      "unit_price": 3500.0,
+      "total_price": 7000.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    }
+  ],
+  "audit_flags": [
+    {
+      "category": "Compliance",
+      "severity": "High",
+      "message": "CVR number not found in registry.",
+      "is_resolved": false
+    }
+  ]
+}

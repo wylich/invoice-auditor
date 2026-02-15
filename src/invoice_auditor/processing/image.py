@@ -2,12 +2,45 @@ import io
 import logging
 from typing import Tuple
 
-from PIL import Image
+from PIL import Image, ImageFilter, ImageStat
 
 logger = logging.getLogger(__name__)
 
 SUPPORTED_FORMATS = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp", "GIF": "image/gif"}
 MAX_SIZE = (2048, 2048)
+
+
+def assess_image_quality(file_object) -> float:
+    """Assess image quality on a 0.0–1.0 scale based on sharpness, contrast, and resolution.
+
+    For invoice/document images, resolution is the strongest predictor of readability.
+    Resets the file position after reading so the file can be reused.
+    """
+    image = Image.open(file_object)
+    gray = image.convert("L")
+
+    # Sharpness: std-dev of edge-detected image (higher = sharper)
+    edges = gray.filter(ImageFilter.FIND_EDGES)
+    sharpness = ImageStat.Stat(edges).stddev[0]
+
+    # Contrast: std-dev of grayscale pixel values (higher = more contrast)
+    contrast = ImageStat.Stat(gray).stddev[0]
+
+    # Resolution: smallest dimension
+    min_dim = min(image.size)
+
+    sharpness_score = min(sharpness / 50.0, 1.0)
+    contrast_score = min(contrast / 50.0, 1.0)
+    resolution_score = min(min_dim / 800.0, 1.0)
+
+    score = 0.2 * sharpness_score + 0.3 * contrast_score + 0.5 * resolution_score
+
+    file_object.seek(0)
+    logger.debug(
+        "Image quality: sharpness=%.1f, contrast=%.1f, min_dim=%d, score=%.2f",
+        sharpness, contrast, min_dim, score,
+    )
+    return score
 
 
 def process_image(file_object) -> Tuple[bytes, str]:

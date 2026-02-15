@@ -25,18 +25,37 @@ class LineItem(BaseModel):
     """
     description: str = Field(..., description="Name of the item, e.g., 'Arla Mælk'")
     quantity: float = Field(default=1.0)
-    unit_price: float
-    total_price: float
-    vat_rate: float = Field(..., description="The VAT percentage, e.g., 0.25 for 25%")
-    vat_category: VAT_TYPES = Field(..., description="Classification of the tax rule")
+    unit_price: Optional[float] = Field(None, description="Unit price if readable on the invoice")
+    total_price: Optional[float] = Field(None, description="Total price if readable on the invoice")
+    vat_rate: Optional[float] = Field(None, description="The VAT percentage, e.g., 0.25 for 25%")
+    vat_category: Optional[VAT_TYPES] = Field(None, description="Classification of the tax rule")
 
     # AI Prediction Confidence
     ai_confidence: float = Field(..., ge=0, le=1, description="0.0 to 1.0 confidence score")
+
+    @field_validator('vat_rate')
+    @classmethod
+    def normalize_vat_rate(cls, v):
+        """Convert percentage (e.g. 25.0) to decimal (0.25) if needed."""
+        if v is not None and v > 1:
+            return v / 100.0
+        return v
 
 class AuditResult(BaseModel):
     """What the Pydantic AI agent returns — extraction output without app metadata."""
     vendor_name: str
     vendor_cvr: Optional[str] = None
+
+    @field_validator('vendor_cvr')
+    @classmethod
+    def normalize_cvr(cls, v):
+        """Strip spaces, dashes, and 'DK' prefix so 'DK 11 22 33 44' becomes '11223344'."""
+        if v is not None:
+            v = v.replace(' ', '').replace('-', '')
+            if v.upper().startswith('DK'):
+                v = v[2:]
+            return v
+        return v
     invoice_date: date
     invoice_time: Optional[str] = None
     currency: CURRENCY_TYPES
@@ -64,7 +83,7 @@ class Invoice(BaseModel):
     invoice_time: Optional[str] = Field(None, description="HH:MM:SS if available")
 
     currency: CURRENCY_TYPES
-    prices_include_vat: bool = Field(..., description="True if line item prices are VAT-inclusive")
+    prices_include_vat: bool = Field(..., description="True if line item prices are VAT-inclusive (most Danish receipts), False if prices are shown excluding VAT (some B2B invoices)")
     total_amount_raw: float = Field(..., description="Total amount in original currency")
     total_vat_raw: float = Field(..., description="Total VAT in original currency")
 

@@ -11,8 +11,8 @@ from invoice_auditor.config import settings
 from invoice_auditor.core.schema import Invoice, AuditResult
 from invoice_auditor.core.vat_manager import VatManager
 from invoice_auditor.core.cvr_manager import CvrManager
-from invoice_auditor.processing.image import process_image
-from invoice_auditor.processing.post_audit import verify_vat_math, handle_currency, assign_status
+from invoice_auditor.processing.image import process_image, assess_image_quality
+from invoice_auditor.processing.post_audit import correct_prices_include_vat, verify_vat_math, handle_currency, assign_status
 
 logger = logging.getLogger(__name__)
 
@@ -57,12 +57,25 @@ async def validate_cvr(ctx: RunContext[AuditDeps], cvr_number: str) -> str:
     return json.dumps(result)
 
 
+QUALITY_THRESHOLD = 0.7
+
 async def run_audit(image_file, filename: str) -> Invoice:
     """Entry point: preprocess image, run agent, post-process, return Invoice."""
     logger.info("Starting audit for %s", filename)
 
+    quality_score = assess_image_quality(image_file)
+    logger.info("Image quality score: %.2f", quality_score)
+
     image_bytes, media_type = process_image(image_file)
     logger.info("Image preprocessed (%d bytes, %s)", len(image_bytes), media_type)
+
+    prompt = "Audit this invoice image. Extract all data, use lookup_vat for each line item, and validate_cvr if a CVR is visible."
+    if quality_score < QUALITY_THRESHOLD:
+        prompt = (
+            f"WARNING: This image has been assessed as low quality (score: {quality_score:.2f}/1.00). "
+            "Be extra cautious — set ai_confidence low and set any unreadable fields to null.\n\n"
+            + prompt
+        )
 
     async with httpx.AsyncClient(timeout=5.0) as client:
         deps = AuditDeps(
@@ -75,7 +88,7 @@ async def run_audit(image_file, filename: str) -> Invoice:
         try:
             result = await audit_agent.run(
                 [
-                    "Audit this invoice image. Extract all data, use lookup_vat for each line item, and validate_cvr if a CVR is visible.",
+                    prompt,
                     BinaryContent(data=image_bytes, media_type=media_type),
                 ],
                 deps=deps,
@@ -102,6 +115,7 @@ async def run_audit(image_file, filename: str) -> Invoice:
         **audit_result.model_dump(),
     )
 
+    correct_prices_include_vat(invoice)
     verify_vat_math(invoice, deps.vat_manager)
     handle_currency(invoice)
     assign_status(invoice)

@@ -1,0 +1,22 @@
+{
+  "vendor_name": "DINERO REGNSKAB ApS",
+  "vendor_cvr": "34731543",
+  "invoice_date": "2020-08-04",
+  "invoice_time": null,
+  "currency": "DKK",
+  "prices_include_vat": false,
+  "total_amount_raw": 1250.0,
+  "total_vat_raw": 250.0,
+  "line_items": [
+    {
+      "description": "Produkt",
+      "quantity": 1.0,
+      "unit_price": 1000.0,
+      "total_price": 1000.0,
+      "vat_rate": 0.25,
+      "vat_category": "Standard (25%)",
+      "ai_confidence": 1.0
+    }
+  ],
+  "audit_flags": []
+}

@@ -3,7 +3,7 @@
 **The AI-Powered CFO for Danish SMEs.**
 A "Human-in-the-Loop" auditing tool that extracts data from invoices, validates Danish CVR numbers, handles split-VAT logic for grocery receipts, and flags anomalies before they hit your accounting software.
 
-Built with **Pydantic AI** for structured LLM extraction with tool calling, and **Streamlit** for the UI.
+Built with **Pydantic AI** for structured LLM extraction with tool calling, **FastAPI** for the REST API, and **Streamlit** for the UI.
 
 ## Quick Start
 
@@ -25,11 +25,21 @@ OPENAI_API_KEY="your_key_here"
 
 ### 3. Run the App
 
+**REST API** (for programmatic access / future React frontend):
+
+```bash
+uv run uvicorn invoice_auditor.api.app:app --reload --port 8000
+```
+
+API docs available at `http://localhost:8000/docs`.
+
+**Streamlit UI** (interactive dashboard):
+
 ```bash
 uv run streamlit run app.py
 ```
 
-Then upload an invoice image from `data/example_invoices/` to test.
+Both can run simultaneously on different ports. Upload an invoice image from `data/example_invoices/` to test.
 
 ## Project Structure
 
@@ -46,7 +56,9 @@ invoice-auditor/
     ├── agent/
     │   ├── auditor.py                      # Pydantic AI agent, tools & orchestration
     │   └── prompt.py                       # System prompt for the agent
-    ├── api/                                # Outgoing API
+    ├── api/
+    │   ├── app.py                          # FastAPI application factory
+    │   └── routes.py                       # REST API endpoints (/api/v1/audits)
     ├── core/
     │   ├── cvr_manager.py                  # Async CVR registry validation
     │   ├── schema.py                       # Pydantic models (Invoice, AuditResult, LineItem, etc.)
@@ -57,6 +69,15 @@ invoice-auditor/
     └── storage/
         └── cvr_cache.json                  # Local CVR response cache
 ```
+
+## API Endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/health` | Health check |
+| `POST` | `/api/v1/audits` | Upload invoice image, run audit |
+| `GET` | `/api/v1/audits` | List audits (filter by `status`, paginate with `limit`/`offset`) |
+| `GET` | `/api/v1/audits/{audit_id}` | Get a single audit by ID |
 
 ## How It Works
 

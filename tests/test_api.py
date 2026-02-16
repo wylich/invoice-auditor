@@ -1,3 +1,5 @@
+from unittest.mock import AsyncMock, patch
+
 from invoice_auditor.core.schema import Invoice
 
 
@@ -31,6 +33,20 @@ def test_create_audit_invalid_content_type(client, mock_run_audit):
     )
     assert resp.status_code == 400
     mock_run_audit.assert_not_called()
+
+
+def test_create_audit_run_audit_failure(client):
+    with patch(
+        "invoice_auditor.api.routes.run_audit",
+        new_callable=AsyncMock,
+        side_effect=RuntimeError("OpenAI down"),
+    ):
+        resp = client.post(
+            "/api/v1/audits",
+            files={"file": ("receipt.jpg", b"\xff\xd8\xff\xe0fake-jpeg", "image/jpeg")},
+        )
+    assert resp.status_code == 502
+    assert resp.json()["detail"] == "Audit service failed"
 
 
 def test_create_audit_filename_preserved(client, mock_run_audit, sample_invoice):

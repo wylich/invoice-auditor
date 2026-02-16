@@ -1,3 +1,4 @@
+import logging
 from io import BytesIO
 from typing import Optional
 
@@ -6,6 +7,8 @@ from pydantic import BaseModel
 
 from invoice_auditor.core.schema import STATUS_TYPES, Invoice
 from invoice_auditor.agent.auditor import run_audit
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1")
 
@@ -28,7 +31,11 @@ async def create_audit(file: UploadFile):
         )
 
     contents = await file.read()
-    invoice = await run_audit(BytesIO(contents), file.filename)
+    try:
+        invoice = await run_audit(BytesIO(contents), file.filename)
+    except Exception:
+        logger.exception("run_audit failed for %s", file.filename)
+        raise HTTPException(status_code=502, detail="Audit service failed")
     _audit_store[invoice.id] = invoice
     return invoice
 

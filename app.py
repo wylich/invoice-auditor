@@ -22,6 +22,12 @@ st.set_page_config(page_title="Invoice Agent", page_icon="🕵️", layout="cent
 st.title("🕵️ AI Invoice Agent")
 st.caption("The AI-Powered CFO for Danish SMEs")
 
+st.warning(
+    "**Privacy notice:** Uploaded invoices are sent to OpenAI for processing and are "
+    "not stored after your session ends. Do not upload documents containing sensitive "
+    "personal data (CPR numbers, bank details, etc.)."
+)
+
 uploaded_file = st.file_uploader("Drop an invoice or receipt", type=["pdf", "png", "jpg", "jpeg", "webp", "avif"])
 
 if uploaded_file is not None:

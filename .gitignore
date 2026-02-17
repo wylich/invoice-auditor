@@ -18,5 +18,9 @@ src/invoice_auditor/storage/cvr_cache.json
 # Claude
 .claude/
 
+# Frontend
+frontend/node_modules
+frontend/dist
+
 # Todo list
 todo.md

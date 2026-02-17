@@ -3,7 +3,7 @@
 **The AI-Powered CFO for Danish SMEs.**
 A "Human-in-the-Loop" auditing tool that extracts data from invoices, validates Danish CVR numbers, handles split-VAT logic for grocery receipts, and flags anomalies before they hit your accounting software.
 
-Built with **Pydantic AI** for structured LLM extraction with tool calling, **FastAPI** for the REST API, and **Streamlit** for the UI.
+Built with **Pydantic AI** for structured LLM extraction with tool calling, **FastAPI** for the REST API, **React** for the frontend, and **Streamlit** as a legacy UI.
 
 ## Quick Start
 
@@ -25,7 +25,7 @@ OPENAI_API_KEY="your_key_here"
 
 ### 3. Run the App
 
-**REST API** (for programmatic access / future React frontend):
+**Backend API:**
 
 ```bash
 uv run uvicorn invoice_auditor.api.app:app --reload --port 8000
@@ -33,21 +33,43 @@ uv run uvicorn invoice_auditor.api.app:app --reload --port 8000
 
 API docs available at `http://localhost:8000/docs`.
 
-**Streamlit UI** (interactive dashboard):
+**React frontend:**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Opens at `http://localhost:5173`. Requires the backend running on port 8000.
+
+**Streamlit UI** (legacy):
 
 ```bash
 uv run streamlit run app.py
 ```
 
-Both can run simultaneously on different ports. Upload an invoice image from `data/example_invoices/` to test.
+Upload an invoice image from `data/example_invoices/` to test.
 
 ## Project Structure
 
 ```
 invoice-auditor/
-├── app.py                                  # Streamlit UI
+├── app.py                                  # Streamlit UI (legacy)
 ├── pyproject.toml                          # Dependencies & build config
 ├── .env                                    # API keys (not committed)
+├── frontend/                               # React frontend
+│   ├── src/
+│   │   ├── App.tsx                         # Main app component
+│   │   ├── api.ts                          # API client (fetch wrapper)
+│   │   ├── types.ts                        # TypeScript types matching Python schema
+│   │   └── components/
+│   │       ├── Header.tsx                  # Top bar
+│   │       ├── FileUpload.tsx              # Drag-and-drop upload zone
+│   │       ├── AuditResult.tsx             # Invoice result card
+│   │       └── PrivacyNotice.tsx           # GDPR warning banner
+│   ├── package.json
+│   └── vite.config.ts
 ├── data/
 │   ├── example_invoices/                   # Sample invoices for testing
 │   └── lookup_dicts/

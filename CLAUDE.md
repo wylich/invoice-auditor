@@ -7,6 +7,7 @@ Always challenge what I propose, if you don't think it's the most appropriate wa
 
 ## Coding preferences
 * Prefer Pydantic over dataclasses
+* Always require absolute file paths
 * Use absolute import paths
 * Use pathlib for paths
 

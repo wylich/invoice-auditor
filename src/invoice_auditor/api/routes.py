@@ -2,8 +2,10 @@ import logging
 from io import BytesIO
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, UploadFile
+from fastapi import APIRouter, HTTPException, Query, Request, UploadFile
 from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from invoice_auditor.core.schema import STATUS_TYPES, Invoice
 from invoice_auditor.agent.auditor import run_audit
@@ -11,6 +13,7 @@ from invoice_auditor.agent.auditor import run_audit
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1")
+limiter = Limiter(key_func=get_remote_address)
 
 _audit_store: dict[str, Invoice] = {}
 
@@ -23,7 +26,8 @@ class AuditListResponse(BaseModel):
 
 
 @router.post("/audits", response_model=Invoice)
-async def create_audit(file: UploadFile):
+@limiter.limit("5/minute;100/day")
+async def create_audit(request: Request, file: UploadFile):
     if file.content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(
             status_code=400,

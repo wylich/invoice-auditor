@@ -17,7 +17,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 _audit_store: dict[str, Invoice] = {}
 
-ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
+ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
 
 
 class AuditListResponse(BaseModel):
@@ -36,7 +36,7 @@ async def create_audit(request: Request, file: UploadFile):
 
     contents = await file.read()
     try:
-        invoice = await run_audit(BytesIO(contents), file.filename)
+        invoice = await run_audit(BytesIO(contents), file.filename, file.content_type)
     except Exception:
         logger.exception("run_audit failed for %s", file.filename)
         raise HTTPException(status_code=502, detail="Audit service failed")

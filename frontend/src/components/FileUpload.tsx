@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 
 interface FileUploadProps {
   onUpload: (file: File) => void;
@@ -14,7 +14,7 @@ export default function FileUpload({ onUpload, disabled }: FileUploadProps) {
   const handleFile = useCallback(
     (file: File) => {
       if (!ACCEPTED_TYPES.includes(file.type)) {
-        alert("Unsupported file type. Please upload a JPEG, PNG, or WEBP image.");
+        alert("Unsupported file type. Please upload a JPEG, PNG, WEBP, or PDF file.");
         return;
       }
       onUpload(file);
@@ -65,17 +65,17 @@ export default function FileUpload({ onUpload, disabled }: FileUploadProps) {
       <input
         ref={inputRef}
         type="file"
-        accept=".jpg,.jpeg,.png,.webp"
+        accept=".jpg,.jpeg,.png,.webp,.pdf"
         onChange={onChange}
         className="hidden"
       />
       <p className="text-lg font-medium">
-        {disabled ? "Uploading..." : "Drop an invoice image here"}
+        {disabled ? "Uploading..." : "Drop an invoice here"}
       </p>
       <p className="mt-1 text-sm">
         {disabled
           ? "Please wait while the audit is being processed"
-          : "or click to browse — JPEG, PNG, WEBP"}
+          : "or click to browse — JPEG, PNG, WEBP, PDF"}
       </p>
     </div>
   );

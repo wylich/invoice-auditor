@@ -11,7 +11,7 @@ from invoice_auditor.config import settings
 from invoice_auditor.core.schema import Invoice, AuditResult
 from invoice_auditor.core.vat_manager import VatManager
 from invoice_auditor.core.cvr_manager import CvrManager
-from invoice_auditor.processing.image import process_image, assess_image_quality
+from invoice_auditor.processing.image import process_image, assess_image_quality, pdf_to_images
 from invoice_auditor.processing.post_audit import correct_prices_include_vat, verify_vat_math, handle_currency, assign_status
 
 logger = logging.getLogger(__name__)
@@ -59,23 +59,31 @@ async def validate_cvr(ctx: RunContext[AuditDeps], cvr_number: str) -> str:
 
 QUALITY_THRESHOLD = 0.7
 
-async def run_audit(image_file, filename: str) -> Invoice:
-    """Entry point: preprocess image, run agent, post-process, return Invoice."""
-    logger.info("Starting audit for %s", filename)
+async def run_audit(image_file, filename: str, content_type: str = "image/jpeg") -> Invoice:
+    """Entry point: preprocess image or PDF, run agent, post-process, return Invoice."""
+    logger.info("Starting audit for %s (content_type=%s)", filename, content_type)
 
-    quality_score = assess_image_quality(image_file)
-    logger.info("Image quality score: %.2f", quality_score)
+    base_prompt = "Audit this invoice. Extract all data, use lookup_vat for each line item, and validate_cvr if a CVR is visible."
 
-    image_bytes, media_type = process_image(image_file)
-    logger.info("Image preprocessed (%d bytes, %s)", len(image_bytes), media_type)
+    if content_type == "application/pdf":
+        pages = pdf_to_images(image_file)
+        binary_contents = [BinaryContent(data=b, media_type=mt) for b, mt in pages]
+        prompt = base_prompt
+    else:
+        quality_score = assess_image_quality(image_file)
+        logger.info("Image quality score: %.2f", quality_score)
 
-    prompt = "Audit this invoice image. Extract all data, use lookup_vat for each line item, and validate_cvr if a CVR is visible."
-    if quality_score < QUALITY_THRESHOLD:
-        prompt = (
-            f"WARNING: This image has been assessed as low quality (score: {quality_score:.2f}/1.00). "
-            "Be extra cautious — set ai_confidence low and set any unreadable fields to null.\n\n"
-            + prompt
-        )
+        image_bytes, media_type = process_image(image_file)
+        logger.info("Image preprocessed (%d bytes, %s)", len(image_bytes), media_type)
+
+        binary_contents = [BinaryContent(data=image_bytes, media_type=media_type)]
+        prompt = base_prompt
+        if quality_score < QUALITY_THRESHOLD:
+            prompt = (
+                f"WARNING: This image has been assessed as low quality (score: {quality_score:.2f}/1.00). "
+                "Be extra cautious — set ai_confidence low and set any unreadable fields to null.\n\n"
+                + prompt
+            )
 
     async with httpx.AsyncClient(timeout=5.0) as client:
         deps = AuditDeps(
@@ -87,10 +95,7 @@ async def run_audit(image_file, filename: str) -> Invoice:
         logger.info("Running agent extraction...")
         try:
             result = await audit_agent.run(
-                [
-                    prompt,
-                    BinaryContent(data=image_bytes, media_type=media_type),
-                ],
+                [prompt, *binary_contents],
                 deps=deps,
                 model=settings.openai.model,
             )

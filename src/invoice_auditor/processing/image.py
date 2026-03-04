@@ -2,6 +2,7 @@ import io
 import logging
 from typing import Tuple
 
+import fitz  # PyMuPDF
 from PIL import Image, ImageFilter, ImageStat
 
 logger = logging.getLogger(__name__)
@@ -74,3 +75,22 @@ def process_image(file_object) -> Tuple[bytes, str]:
     except Exception as e:
         logger.error("Image processing failed: %s", e)
         raise ValueError("Could not process image. File might be corrupted or unsupported.") from e
+
+
+def pdf_to_images(file_object) -> list[Tuple[bytes, str]]:
+    """Convert all pages of a PDF to JPEG images.
+
+    Returns a list of (image_bytes, media_type) tuples, one per page.
+    """
+    file_object.seek(0)
+    pdf = fitz.open(stream=file_object.read(), filetype="pdf")
+    pages = []
+    for page in pdf:
+        pix = page.get_pixmap(dpi=150)
+        image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        image.thumbnail(MAX_SIZE)
+        buffer = io.BytesIO()
+        image.save(buffer, format="JPEG", quality=85)
+        pages.append((buffer.getvalue(), "image/jpeg"))
+    logger.info("PDF converted: %d page(s)", len(pages))
+    return pages

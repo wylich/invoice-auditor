@@ -10,6 +10,6 @@ Always challenge what I propose, if you don't think it's the most appropriate wa
 * Always require absolute file paths
 * Use absolute import paths
 * Use pathlib for paths
-
+* You will never under any circumstances expose the contents of .env files
 
 Use uv package manager to run things.

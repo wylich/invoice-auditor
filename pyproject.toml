@@ -9,7 +9,6 @@ dependencies = [
     "httpx>=0.28.1",
     "pydantic-ai",
     "pillow",
-    "streamlit>=1.53.1",
     "pydantic-settings[toml]",
     "pylance>=2.0.0",
     "fastapi>=0.115.0",

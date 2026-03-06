@@ -1,14 +1,16 @@
+import json
 import logging
 from io import BytesIO
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request, UploadFile
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from invoice_auditor.core.schema import STATUS_TYPES, Invoice
-from invoice_auditor.agent.auditor import run_audit
+from invoice_auditor.agent.auditor import run_audit, run_audit_stream
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +44,33 @@ async def create_audit(request: Request, file: UploadFile):
         raise HTTPException(status_code=502, detail="Audit service failed")
     _audit_store[invoice.id] = invoice
     return invoice
+
+
+@router.post("/audits/stream")
+@limiter.limit("5/minute;100/day")
+async def create_audit_stream(request: Request, file: UploadFile):
+    if file.content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '{file.content_type}'. Allowed: {', '.join(sorted(ALLOWED_CONTENT_TYPES))}",
+        )
+
+    contents = await file.read()
+    filename = file.filename
+    content_type = file.content_type
+
+    async def generate():
+        async for event in run_audit_stream(BytesIO(contents), filename, content_type):
+            if event.get("type") == "complete":
+                invoice = Invoice(**event["invoice"])
+                _audit_store[invoice.id] = invoice
+            yield f"data: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.get("/audits", response_model=AuditListResponse)

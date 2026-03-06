@@ -51,3 +51,49 @@ export async function getAudit(id: string): Promise<Invoice> {
 
   return res.json();
 }
+
+export async function createAuditStream(
+  file: File,
+  onStep: (step: string, status: "active" | "done") => void,
+  onComplete: (invoice: Invoice) => void,
+  onError: (message: string) => void,
+): Promise<void> {
+  const form = new FormData();
+  form.append("file", file);
+
+  const res = await fetch(`${API}/audits/stream`, {
+    method: "POST",
+    body: form,
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.detail ?? `Upload failed (${res.status})`);
+  }
+
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      const payload = JSON.parse(line.slice(6));
+
+      if (payload.type === "step") {
+        onStep(payload.step, payload.status);
+      } else if (payload.type === "complete") {
+        onComplete(payload.invoice as Invoice);
+      } else if (payload.type === "error") {
+        onError(payload.message ?? "Unknown error");
+      }
+    }
+  }
+}

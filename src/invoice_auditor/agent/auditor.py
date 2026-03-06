@@ -1,6 +1,9 @@
+import asyncio
 import json
 import logging
 import uuid
+from collections.abc import AsyncGenerator
+from typing import Any
 
 import httpx
 from pydantic import BaseModel
@@ -22,6 +25,8 @@ class AuditDeps(BaseModel):
     vat_manager: VatManager
     cvr_manager: CvrManager
     http_client: httpx.AsyncClient
+    progress_queue: asyncio.Queue | None = None
+    vat_signaled: bool = False
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -40,6 +45,10 @@ async def lookup_vat(ctx: RunContext[AuditDeps], item_description: str) -> str:
     Args:
         item_description: The product/service description from the receipt.
     """
+    if ctx.deps.progress_queue is not None and not ctx.deps.vat_signaled:
+        ctx.deps.vat_signaled = True
+        await ctx.deps.progress_queue.put({"type": "step", "step": "vat", "status": "active"})
+
     rate, category, reason = ctx.deps.vat_manager.lookup_item(item_description)
     logger.debug("lookup_vat(%s) -> %.0f%% %s (%s)", item_description, rate * 100, category, reason)
     return f"VAT rate: {rate*100}%, category: {category}, reason: {reason}"
@@ -52,8 +61,15 @@ async def validate_cvr(ctx: RunContext[AuditDeps], cvr_number: str) -> str:
     Args:
         cvr_number: The 8-digit Danish CVR number to validate.
     """
+    if ctx.deps.progress_queue is not None:
+        await ctx.deps.progress_queue.put({"type": "step", "step": "cvr", "status": "active"})
+
     result = await ctx.deps.cvr_manager.validate_cvr(cvr_number, ctx.deps.http_client)
     logger.debug("validate_cvr(%s) -> valid=%s, risk=%s", cvr_number, result.get("valid"), result.get("risk_level"))
+
+    if ctx.deps.progress_queue is not None:
+        await ctx.deps.progress_queue.put({"type": "step", "step": "cvr", "status": "done"})
+
     return json.dumps(result)
 
 
@@ -127,3 +143,88 @@ async def run_audit(image_file, filename: str, content_type: str = "image/jpeg")
 
     logger.info("Audit complete for %s: status=%s, flags=%d", filename, invoice.status, len(invoice.audit_flags))
     return invoice
+
+
+async def run_audit_stream(
+    image_file, filename: str, content_type: str = "image/jpeg"
+) -> AsyncGenerator[dict[str, Any], None]:
+    """Like run_audit but yields SSE event dicts for each pipeline phase."""
+    queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+
+    async def _run() -> None:
+        try:
+            await queue.put({"type": "step", "step": "image", "status": "active"})
+
+            base_prompt = "Audit this invoice. Extract all data, use lookup_vat for each line item, and validate_cvr if a CVR is visible."
+
+            if content_type == "application/pdf":
+                pages = pdf_to_images(image_file)
+                binary_contents = [BinaryContent(data=b, media_type=mt) for b, mt in pages]
+                prompt = base_prompt
+            else:
+                quality_score = assess_image_quality(image_file)
+                image_bytes, media_type = process_image(image_file)
+                binary_contents = [BinaryContent(data=image_bytes, media_type=media_type)]
+                prompt = base_prompt
+                if quality_score < QUALITY_THRESHOLD:
+                    prompt = (
+                        f"WARNING: This image has been assessed as low quality (score: {quality_score:.2f}/1.00). "
+                        "Be extra cautious — set ai_confidence low and set any unreadable fields to null.\n\n"
+                        + prompt
+                    )
+
+            await queue.put({"type": "step", "step": "image", "status": "done"})
+            await queue.put({"type": "step", "step": "extraction", "status": "active"})
+
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                deps = AuditDeps(
+                    vat_manager=VatManager(),
+                    cvr_manager=CvrManager(),
+                    http_client=client,
+                    progress_queue=queue,
+                )
+
+                try:
+                    result = await audit_agent.run(
+                        [prompt, *binary_contents],
+                        deps=deps,
+                        model=settings.openai.model,
+                    )
+                except Exception as exc:
+                    logger.exception("Agent run failed for %s", filename)
+                    await queue.put({"type": "error", "message": str(exc)})
+                    return
+
+                if deps.vat_signaled:
+                    await queue.put({"type": "step", "step": "vat", "status": "done"})
+
+            await queue.put({"type": "step", "step": "extraction", "status": "done"})
+            await queue.put({"type": "step", "step": "finalizing", "status": "active"})
+
+            audit_result = result.output
+            invoice = Invoice(
+                id=str(uuid.uuid4()),
+                filename=filename,
+                total_amount_dkk=audit_result.total_amount_raw,
+                **audit_result.model_dump(),
+            )
+
+            correct_prices_include_vat(invoice)
+            verify_vat_math(invoice, deps.vat_manager)
+            handle_currency(invoice)
+            assign_status(invoice)
+
+            await queue.put({"type": "step", "step": "finalizing", "status": "done"})
+            await queue.put({"type": "complete", "invoice": invoice.model_dump(mode="json")})
+
+        except Exception as exc:
+            logger.exception("run_audit_stream failed for %s", filename)
+            await queue.put({"type": "error", "message": str(exc)})
+
+    task = asyncio.create_task(_run())
+    while True:
+        event = await queue.get()
+        yield event
+        if event["type"] in ("complete", "error"):
+            break
+    await task

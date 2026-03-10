@@ -95,7 +95,7 @@ invoice-auditor/
 ## How It Works
 
 1. **Image preprocessing** — uploaded images are converted to standardized JPEG
-2. **Pydantic AI agent** — a GPT-4o-mini agent extracts structured data from the image, calling tools:
+2. **Pydantic AI agent** — a GPT-5-mini agent extracts structured data from the image, calling tools:
    - `lookup_vat` — checks each line item against Danish VAT rules
    - `validate_cvr` — validates vendor CVR numbers against the Danish business registry
 3. **Deterministic post-processing** — VAT math verification, currency handling, and status assignment run as plain Python (not LLM) for reliability

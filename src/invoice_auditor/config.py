@@ -8,7 +8,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 class OpenAISettings(BaseModel):
-    model: str = "openai:gpt-4o-mini"
+    model: str = "openai:gpt-5-mini"
 
 
 class PathSettings(BaseModel):

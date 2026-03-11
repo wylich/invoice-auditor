@@ -4,6 +4,8 @@ import PrivacyNotice from "./components/PrivacyNotice";
 import FileUpload from "./components/FileUpload";
 import AuditResult from "./components/AuditResult";
 import AuditProgress from "./components/AuditProgress";
+import ExampleInvoices from "./components/ExampleInvoices";
+import InvoicePreview from "./components/InvoicePreview";
 import { createAuditStream } from "./api";
 import type { Invoice } from "./types";
 
@@ -12,12 +14,16 @@ export default function App() {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [steps, setSteps] = useState<Record<string, "active" | "done">>({});
+  const [stagedFile, setStagedFile] = useState<File | null>(null);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
 
   const handleUpload = useCallback(async (file: File) => {
     setUploading(true);
     setError(null);
     setInvoice(null);
     setSteps({});
+    setStagedFile(null);
+    setPreviewFile(null);
 
     try {
       await createAuditStream(
@@ -25,6 +31,7 @@ export default function App() {
         (step, status) => setSteps((prev) => ({ ...prev, [step]: status })),
         (result) => {
           setInvoice(result);
+          setPreviewFile(file);
           setSteps({});
         },
         (message) => {
@@ -46,7 +53,8 @@ export default function App() {
 
       <main className="mx-auto max-w-4xl space-y-6 px-4 py-8">
         <PrivacyNotice />
-        <FileUpload onUpload={handleUpload} disabled={uploading} />
+        <ExampleInvoices onSelect={setStagedFile} disabled={uploading} />
+        <FileUpload onUpload={handleUpload} disabled={uploading} stagedFile={stagedFile} />
 
         {uploading && Object.keys(steps).length > 0 && (
           <AuditProgress steps={steps} />
@@ -59,6 +67,7 @@ export default function App() {
         )}
 
         {invoice && <AuditResult invoice={invoice} />}
+        {invoice && previewFile && <InvoicePreview file={previewFile} />}
       </main>
     </div>
   );

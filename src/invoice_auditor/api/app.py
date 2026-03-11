@@ -14,6 +14,7 @@ from slowapi.errors import RateLimitExceeded
 from invoice_auditor.api.routes import limiter, router
 
 FRONTEND_DIST = Path(__file__).resolve().parents[3] / "frontend" / "dist"
+EXAMPLE_INVOICES = Path(__file__).resolve().parents[3] / "data" / "example_invoices"
 
 
 def create_app() -> FastAPI:
@@ -34,6 +35,12 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     application.include_router(router)
+
+    application.mount(
+        "/examples",
+        StaticFiles(directory=EXAMPLE_INVOICES),
+        name="examples",
+    )
 
     if FRONTEND_DIST.exists():
         application.mount(

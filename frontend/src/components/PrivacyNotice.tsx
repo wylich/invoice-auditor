@@ -5,12 +5,9 @@ export default function PrivacyNotice() {
       processing. 
       OpenAI retains API data for up to 30 days for safety
       monitoring, but does not use it for model training. 
-      No data is stored on this server after processing. <br />
+      No data is stored on this server after processing.
       Ensure you have a legal basis for sharing any personal 
       data with a third-party processor (e.g. GDPR compliance).
     </div>
   );
 }
-
-
-// to add a newline you use <br />

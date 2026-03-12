@@ -106,7 +106,7 @@ export default function FileUpload({ onUpload, disabled, stagedFile }: FileUploa
           <p className="mt-1 text-sm">
             {disabled
               ? "Please wait while the audit is being processed"
-              : "or click to browse — JPEG, PNG, WEBP, PDF"}
+              : "or click to browse - JPEG, PNG, WEBP, PDF"}
           </p>
         </>
       )}

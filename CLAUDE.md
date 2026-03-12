@@ -13,3 +13,4 @@ Always challenge what I propose, if you don't think it's the most appropriate wa
 * You will never under any circumstances expose the contents of .env files
 
 Use uv package manager to run things.
+Never use EM dashes, i.e. "—". Use hyphen - instead.

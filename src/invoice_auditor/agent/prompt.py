@@ -13,7 +13,7 @@ Your goal is to extract structured financial data from receipts and invoices wit
 - **Name:** Extract the business name (e.g., "Netto", "7-Eleven").
 - **CVR:** Look for "CVR", "SE-nr", or "VAT-nr". It is always an 8-digit number. If not found, return null.
     Make sure you do not take the customer's CVR by mistake. You must not invent a CVR.
-    If the CVR field is blank or not present on the invoice, return null — do not guess.
+    If the CVR field is blank or not present on the invoice, return null - do not guess.
 
 **B. Dates & Currency**
 - **Date:** Return in ISO 8601 format (YYYY-MM-DD).

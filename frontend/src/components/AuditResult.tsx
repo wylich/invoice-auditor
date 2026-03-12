@@ -1,4 +1,19 @@
+import { useState } from "react";
 import type { Invoice, AuditFlag } from "../types";
+
+function highlightJson(json: string): string {
+  return json.replace(
+    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+    (match) => {
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) return `<span class="text-blue-600">${match}</span>`;
+        return `<span class="text-green-700">${match}</span>`;
+      }
+      if (/true|false|null/.test(match)) return `<span class="text-purple-600">${match}</span>`;
+      return `<span class="text-amber-600">${match}</span>`;
+    }
+  );
+}
 
 const STATUS_COLORS: Record<string, string> = {
   Green: "bg-green-100 text-green-800",
@@ -58,8 +73,25 @@ function formatVatRate(rate: number | null): string {
 }
 
 export default function AuditResult({ invoice }: { invoice: Invoice }) {
+  const [view, setView] = useState<"formatted" | "json">("formatted");
   return (
     <div className="space-y-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="flex gap-1 border-b border-gray-100 pb-4">
+        {(["formatted", "json"] as const).map((v) => (
+          <button
+            key={v}
+            onClick={() => setView(v)}
+            className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
+              view === v
+                ? "bg-gray-100 text-gray-900"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {v === "formatted" ? "Formatted" : "JSON"}
+          </button>
+        ))}
+      </div>
+      {view === "formatted" && <>
       {/* Header row */}
       <div className="flex items-start justify-between">
         <div>
@@ -155,6 +187,13 @@ export default function AuditResult({ invoice }: { invoice: Invoice }) {
             ))}
           </div>
         </div>
+      )}
+      </>}
+      {view === "json" && (
+        <pre
+          className="overflow-auto rounded-md bg-gray-50 p-4 text-xs leading-relaxed text-gray-800"
+          dangerouslySetInnerHTML={{ __html: highlightJson(JSON.stringify(invoice, null, 2)) }}
+        />
       )}
     </div>
   );

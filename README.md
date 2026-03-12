@@ -5,6 +5,8 @@ A "Human-in-the-Loop" auditing tool that extracts data from invoices, validates 
 
 Built with **Pydantic AI** for structured LLM extraction with tool calling, **FastAPI** for the REST API, and **React** for the frontend.
 
+**Deployed app:** https://invoice-auditor-production.up.railway.app/
+
 ## Quick Start
 
 This project uses [uv](https://github.com/astral-sh/uv) for Python package management.
@@ -43,45 +45,22 @@ npm run dev
 
 Opens at `http://localhost:5173`. Requires the backend running on port 8000.
 
-## Project Structure
+## Architecture
 
 ```
-invoice-auditor/
-├── pyproject.toml                          # Dependencies & build config
-├── .env                                    # API keys (not committed)
-├── frontend/                               # React frontend
-│   ├── src/
-│   │   ├── App.tsx                         # Main app component
-│   │   ├── api.ts                          # API client (fetch wrapper)
-│   │   ├── types.ts                        # TypeScript types matching Python schema
-│   │   └── components/
-│   │       ├── Header.tsx                  # Top bar
-│   │       ├── FileUpload.tsx              # Drag-and-drop upload zone
-│   │       ├── AuditResult.tsx             # Invoice result card
-│   │       └── PrivacyNotice.tsx           # GDPR warning banner
-│   ├── package.json
-│   └── vite.config.ts
-├── data/
-│   ├── example_invoices/                   # Sample invoices for testing
-│   └── lookup_dicts/
-│       └── vat_lookup.json                 # VAT exemption rules ("Pant", "Avis", etc.)
-└── src/invoice_auditor/
-    ├── agent/
-    │   ├── auditor.py                      # Pydantic AI agent, tools & orchestration
-    │   └── prompt.py                       # System prompt for the agent
-    ├── api/
-    │   ├── app.py                          # FastAPI application factory
-    │   └── routes.py                       # REST API endpoints (/api/v1/audits)
-    ├── core/
-    │   ├── cvr_manager.py                  # Async CVR registry validation
-    │   ├── schema.py                       # Pydantic models (Invoice, AuditResult, LineItem, etc.)
-    │   └── vat_manager.py                  # VAT rule lookup engine
-    ├── processing/
-    │   ├── image.py                        # Image preprocessing
-    │   └── post_audit.py                   # Post-audit verification & status assignment
-    └── storage/
-        └── cvr_cache.json                  # Local CVR response cache
+Browser
+  └─► React frontend          Drag-and-drop upload, result display
+        └─► FastAPI (REST)     Receives image, returns structured Invoice JSON
+              └─► Image preprocessing      Normalise to standardised JPEG
+                    └─► Pydantic AI agent  LLM extraction with two tools:
+                          ├─ lookup_vat    Checks line items against Danish VAT rules
+                          └─ validate_cvr  Validates vendor CVR via the Danish registry
+                                └─► Deterministic post-audit
+                                      VAT math verification, currency conversion,
+                                      and Green / Review / Red status assignment
 ```
+
+The key design split: the **LLM agent** handles the inherently fuzzy work (reading handwriting, parsing unstructured layouts, inferring missing fields). Everything that can be expressed as a rule - VAT arithmetic, CVR lookup, status thresholds - runs as plain Python in the post-audit layer, keeping it testable and reliable.
 
 ## API Endpoints
 
@@ -94,12 +73,12 @@ invoice-auditor/
 
 ## How It Works
 
-1. **Image preprocessing** — uploaded images are converted to standardized JPEG
-2. **Pydantic AI agent** — a GPT-5-mini agent extracts structured data from the image, calling tools:
-   - `lookup_vat` — checks each line item against Danish VAT rules
-   - `validate_cvr` — validates vendor CVR numbers against the Danish business registry
-3. **Deterministic post-processing** — VAT math verification, currency handling, and status assignment run as plain Python (not LLM) for reliability
-4. **Result** — the invoice is classified as Green (auto-approved), Review, or Red (issues found)
+1. **Image preprocessing** - uploaded images are converted to standardized JPEG
+2. **Pydantic AI agent** - a GPT-5-mini agent extracts structured data from the image, calling tools:
+   - `lookup_vat` - checks each line item against Danish VAT rules
+   - `validate_cvr` - validates vendor CVR numbers against the Danish business registry
+3. **Deterministic post-processing** - VAT math verification, currency handling, and status assignment run as plain Python (not LLM) for reliability
+4. **Result** - the invoice is classified as Green (auto-approved), Review, or Red (issues found)
 
 ## Disclaimer
 

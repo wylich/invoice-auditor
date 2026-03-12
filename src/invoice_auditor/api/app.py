@@ -36,11 +36,12 @@ def create_app() -> FastAPI:
 
     application.include_router(router)
 
-    application.mount(
-        "/examples",
-        StaticFiles(directory=EXAMPLE_INVOICES),
-        name="examples",
-    )
+    if EXAMPLE_INVOICES.exists():
+        application.mount(
+            "/examples",
+            StaticFiles(directory=EXAMPLE_INVOICES),
+            name="examples",
+        )
 
     if FRONTEND_DIST.exists():
         application.mount(

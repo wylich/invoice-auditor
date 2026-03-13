@@ -7,7 +7,7 @@ export default function Header() {
             Invoice Auditor
           </h1>
           <p className="text-sm text-gray-500">
-            Upload a receipt to extract and audit invoice data
+            A personal project demo of an AI-powered auditing layer for Danish SMEs. Catches errors in vendor invoices (wrong amounts, VAT misclassification, currency conversions, duplicates) before they reach your accounting software.
           </p>
         </div>
         <a

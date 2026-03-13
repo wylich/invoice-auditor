@@ -20,7 +20,7 @@ export default function ExampleInvoices({ onSelect, disabled }: ExampleInvoicesP
 
   return (
     <div>
-      <p className="mb-2 text-sm text-gray-500">Don't have a invoice to audit? Try an example here:</p>
+      <p className="mb-2 text-sm text-gray-500">Don't have an invoice to audit? Try an example here:</p>
       <div className="flex gap-3">
         {EXAMPLES.map((ex) => (
           <button

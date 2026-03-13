@@ -48,10 +48,10 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
 
-      <main className="mx-auto max-w-4xl space-y-6 px-4 py-8">
+      <main className="flex-1 mx-auto max-w-4xl space-y-6 px-4 py-8">
         <PrivacyNotice />
         <ExampleInvoices onSelect={setStagedFile} disabled={uploading} />
         <FileUpload onUpload={handleUpload} disabled={uploading} stagedFile={stagedFile} />
@@ -69,6 +69,11 @@ export default function App() {
         {invoice && <AuditResult invoice={invoice} />}
         {invoice && previewFile && <InvoicePreview file={previewFile} />}
       </main>
+      <footer className="border-t border-gray-200 bg-white mt-auto">
+        <div className="mx-auto max-w-4xl px-4 py-4 text-sm text-gray-500">
+          © 2026 Frederik Wylich-Muxoll. All rights reserved.
+        </div>
+      </footer>
     </div>
   );
 }

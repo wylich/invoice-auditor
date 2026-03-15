@@ -6,10 +6,12 @@ import AuditResult from "./components/AuditResult";
 import AuditProgress from "./components/AuditProgress";
 import ExampleInvoices from "./components/ExampleInvoices";
 import InvoicePreview from "./components/InvoicePreview";
+import AboutPage from "./components/AboutPage";
 import { createAuditStream } from "./api";
 import type { Invoice } from "./types";
 
 export default function App() {
+  const [currentPage, setCurrentPage] = useState<"home" | "about">("home");
   const [uploading, setUploading] = useState(false);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,25 +51,34 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
+      <Header
+        currentPage={currentPage}
+        onAboutClick={() => setCurrentPage((p) => (p === "about" ? "home" : "about"))}
+      />
 
       <main className="flex-1 mx-auto max-w-4xl space-y-6 px-4 py-8">
-        <PrivacyNotice />
-        <ExampleInvoices onSelect={setStagedFile} disabled={uploading} />
-        <FileUpload onUpload={handleUpload} disabled={uploading} stagedFile={stagedFile} />
+        {currentPage === "about" ? (
+          <AboutPage />
+        ) : (
+          <>
+            <PrivacyNotice />
+            <ExampleInvoices onSelect={setStagedFile} disabled={uploading} />
+            <FileUpload onUpload={handleUpload} disabled={uploading} stagedFile={stagedFile} />
 
-        {uploading && Object.keys(steps).length > 0 && (
-          <AuditProgress steps={steps} />
+            {uploading && Object.keys(steps).length > 0 && (
+              <AuditProgress steps={steps} />
+            )}
+
+            {error && (
+              <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+                <strong>Error:</strong> {error}
+              </div>
+            )}
+
+            {invoice && <AuditResult invoice={invoice} />}
+            {invoice && previewFile && <InvoicePreview file={previewFile} />}
+          </>
         )}
-
-        {error && (
-          <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
-            <strong>Error:</strong> {error}
-          </div>
-        )}
-
-        {invoice && <AuditResult invoice={invoice} />}
-        {invoice && previewFile && <InvoicePreview file={previewFile} />}
       </main>
       <footer className="border-t border-gray-200 bg-white mt-auto">
         <div className="mx-auto max-w-4xl px-4 py-4 text-sm text-gray-500">
